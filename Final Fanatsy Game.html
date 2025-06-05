@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IPL Fantasy Points Calculator (Multi-Player)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --main-bg: #f9f9f9;
+      --main-bg2: #e0e0e0;
+      --header: #AD1F67;
+      --table-head: #AD1F67;
+      --table-head2: #671A55;
+      --table-head-font: #FFD950;
+      --input-border: #AD1F67;
+      --input-bg: #FFF6E0;
+      --input-focus: #F56948;
+      --btn-bg: #FFD950;
+      --btn-bg2: #F56948;
+      --btn-font: #671A55;
+      --btn-hover-bg: #F56948;
+      --btn-hover-bg2: #FFD950;
+      --btn-hover-font: #fff;
+      --remove-btn: #AD1F67;
+      --remove-btn-font: #FFD950;
+      --remove-btn-hover: #F56948;
+      --remove-btn-hover-font: #fff;
+      --result-table-bg: #FFF6E0;
+      --result-table-th: #AD1F67;
+      --result-table-th-font: #FFD950;
+      --result-table-td: #671A55;
+      --body-font: #671A55;
+      --shadow: rgba(103, 26, 85, 0.05);
+      --team-section-bg: #fff;
+      --team-section-border: #AD1F67;
+      --bar-bg: #F56948;
+      --bar-bg2: #FFD950;
+      --bar-label: #fff;
+    }
+    body {
+      font-family: 'Montserrat', Arial, sans-serif;
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, var(--main-bg) 0%, var(--main-bg2) 100%);
+      color: var(--body-font);
+      box-shadow: 0 6px 32px var(--shadow);
+      border-radius: 16px;
+      transition: background 1s;
+    }
+    h1 {
+      text-align: center;
+      color: var(--header);
+      margin-bottom: 2rem;
+      letter-spacing: 1px;
+      font-weight: 700;
+      text-shadow: 1px 1px 6px #fff5;
+      transition: color 1s;
+    }
+    .upload-section {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .upload-section label {
+      font-weight: 600;
+      color: var(--header);
+      margin-right: 1rem;
+    }
+    .upload-section input[type="file"] {
+      margin-right: 1rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+    th, td {
+      border: none;
+      padding: 0.7rem 0.3rem;
+      text-align: center;
+      font-size: 1rem;
+    }
+    th {
+      background: linear-gradient(90deg, var(--table-head) 60%, var(--table-head2) 100%);
+      color: var(--table-head-font);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      transition: background 1s, color 1s;
+    }
+    tr:not(:last-child) td {
+      border-bottom: 1px solid var(--main-bg);
+      transition: border-color 1s;
+    }
+    input[type="number"], input[type="text"], select {
+      width: 80px;
+      padding: 0.4rem 0.3rem;
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      font-size: 1rem;
+      background: var(--input-bg);
+      color: var(--body-font);
+      transition: border 0.2s, background 1s, color 1s;
+    }
+    input[type="number"]:focus, input[type="text"]:focus, select:focus {
+      border: 1.5px solid var(--input-focus);
+      outline: none;
+      background: #FFF1D6;
+    }
+    button {
+      margin-top: 1rem;
+      margin-right: 0.5rem;
+      padding: 0.6rem 1.4rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      background: linear-gradient(90deg, var(--btn-bg) 60%, var(--btn-bg2) 100%);
+      color: var(--btn-font);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #FFD95066;
+      transition: background 0.2s, color 0.2s, transform 0.1s, background 1s;
+    }
+    button:hover {
+      background: linear-gradient(90deg, var(--btn-hover-bg) 60%, var(--btn-hover-bg2) 100%);
+      color: var(--btn-hover-font);
+      transform: translateY(-2px) scale(1.04);
+    }
+    .remove-btn {
+      background: var(--remove-btn);
+      color: var(--remove-btn-font);
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      font-size: 1rem;
+      font-weight: bold;
+      box-shadow: none;
+      margin: 0;
+      transition: background 0.2s, color 0.2s, transform 0.1s, background 1s;
+    }
+    .remove-btn:hover {
+      background: var(--remove-btn-hover);
+      color: var(--remove-btn-hover-font);
+      transform: scale(1.1);
+    }
+    .result {
+      margin-top: 2.5rem;
+      font-weight: bold;
+      font-size: 1.15rem;
+      text-align: center;
+    }
+    .result table {
+      margin: 1rem auto 0 auto;
+      width: 60%;
+      background: var(--result-table-bg);
+      box-shadow: 0 2px 8px #AD1F6733;
+      border-radius: 8px;
+      transition: background 1s;
+    }
+    .result th {
+      background: var(--result-table-th);
+      color: var(--result-table-th-font);
+      font-size: 1.08rem;
+      transition: background 1s, color 1s;
+    }
+    .result td {
+      font-size: 1.05rem;
+      padding: 0.6rem;
+      color: var(--result-table-td);
+      transition: color 1s;
+    }
+    .animated-fade-in {
+      animation: fadeIn 0.6s;
+    }
+    .team-section {
+      background: var(--team-section-bg);
+      border: 2px solid var(--team-section-border);
+      border-radius: 12px;
+      margin: 0 0 2.5rem 0;
+      padding: 1.5rem 1rem 1rem 1rem;
+      box-shadow: 0 2px 12px var(--shadow);
+      animation: fadeIn 0.7s;
+    }
+    .team-section h2 {
+      color: var(--header);
+      margin-bottom: 1.2rem;
+      font-size: 1.25rem;
+      text-align: center;
+      font-weight: 700;
+    }
+    .bar-chart-wrapper {
+      margin-bottom: 2.2rem;
+      margin-top: 0.7rem;
+    }
+    .bar-chart {
+      width: 98%;
+      max-width: 600px;
+      margin: 0 auto 0.7rem auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+    .bar-label {
+      width: 110px;
+      min-width: 80px;
+      text-align: right;
+      font-weight: 600;
+      color: var(--table-head2);
+      font-size: 0.98rem;
+      margin-right: 0.2rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .bar-bar-container {
+      flex: 1 1 0%;
+      background: #f3f3f3;
+      border-radius: 6px;
+      height: 22px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px #0001;
+      display: flex;
+      align-items: center;
+    }
+    .bar-bar {
+      height: 100%;
+      border-radius: 6px;
+      background: linear-gradient(90deg, var(--bar-bg) 60%, var(--bar-bg2) 100%);
+      transition: width 0.8s cubic-bezier(.77,0,.18,1);
+      color: var(--bar-label);
+      text-align: right;
+      font-weight: 600;
+      font-size: 0.97rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 0.7rem;
+      letter-spacing: 0.5px;
+      box-shadow: 0 1px 6px #FFD95055;
+      min-width: 40px;
+    }
+    .bar-value {
+      margin-left: 0.5rem;
+      font-size: 0.97rem;
+      color: var(--table-head2);
+      font-weight: 600;
+    }
+    .team-group {
+      margin-bottom: 2rem;
+    }
+    .team-group h3 {
+      color: var(--table-head2);
+      margin-bottom: 0.5rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+    .team-total {
+      color: var(--header);
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-left: 0.6rem;
+    }
+    .bar-container {
+      width: 100%;
+      background: #f3f3f3;
+      border-radius: 6px;
+      height: 24px;
+      margin: 0.3rem 0 0.8rem 0;
+      overflow: hidden;
+      box-shadow: 0 1px 4px #0001;
+    }
+    .bar {
+      height: 100%;
+      border-radius: 6px;
+      background: linear-gradient(90deg, var(--bar-bg) 60%, var(--bar-bg2) 100%);
+      transition: width 0.8s cubic-bezier(.77,0,.18,1);
+      color: #fff;
+      text-align: right;
+      padding-right: 0.8rem;
+      font-weight: 600;
+      font-size: 1.02rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      letter-spacing: 0.5px;
+      box-shadow: 0 1px 6px #FFD95055;
+    }
+    .team-player-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem 1.5rem;
+      margin-bottom: 0.5rem;
+      padding-left: 1rem;
+    }
+    .team-player-list span {
+      background: #f1e9fa;
+      border-radius: 6px;
+      padding: 0.3rem 0.7rem;
+      color: var(--table-head2);
+      font-weight: 500;
+      font-size: 1rem;
+      margin-bottom: 0.2rem;
+      display: inline-block;
+    }
+    @media (max-width: 700px) {
+      body { padding: 0.5rem; }
+      table, .result table { width: 100%; }
+      input[type="number"], input[type="text"], select { width: 60px; font-size: 0.95rem; }
+      h1 { font-size: 1.3rem; }
+      .team-section { padding: 1rem 0.2rem; }
+      .team-player-list { padding-left: 0.2rem; }
+      .bar-label { width: 60px; min-width: 55px; font-size: 0.93rem; }
+      .bar-bar { font-size: 0.89rem; padding-right: 0.3rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="team-section" id="teamSection" style="display:none;"></div>
+  <h1>IPL Fantasy Points Calculator (Multi-Player)</h1>
+  <div class="upload-section">
+    <label for="excelUpload">Upload Excel (.xlsx):</label>
+    <input type="file" id="excelUpload" accept=".xlsx" />
+    <button type="button" id="uploadBtn">Upload</button>
+  </div>
+  <form id="fantasyForm">
+    <table id="playersTable">
+      <thead>
+        <tr>
+          <th>Team</th>
+          <th>Player Name</th>
+          <th>Runs</th>
+          <th>4s</th>
+          <th>6s</th>
+          <th>Wickets</th>
+          <th>Catches</th>
+          <th>Run Outs</th>
+          <th>Stumpings</th>
+          <th>Playing XI?</th>
+          <th>Remove</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><input type="text" name="team" required /></td>
+          <td><input type="text" name="name" required /></td>
+          <td><input type="number" name="runs" min="0" value="0" required /></td>
+          <td><input type="number" name="fours" min="0" value="0" required /></td>
+          <td><input type="number" name="sixes" min="0" value="0" required /></td>
+          <td><input type="number" name="wickets" min="0" value="0" required /></td>
+          <td><input type="number" name="catches" min="0" value="0" required /></td>
+          <td><input type="number" name="runouts" min="0" value="0" required /></td>
+          <td><input type="number" name="stumpings" min="0" value="0" required /></td>
+          <td>
+            <select name="playingXI">
+              <option value="1" selected>Yes</option>
+              <option value="0">No</option>
+            </select>
+          </td>
+          <td><button type="button" class="remove-btn" onclick="removeRow(this)">&#10005;</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <button type="button" onclick="addRow()">Add Player</button>
+    <button type="submit">Calculate Points</button>
+  </form>
+
+  <div class="result" id="result"></div>
+
+  <script>
+    function addRow() {
+      const tbody = document.querySelector('#playersTable tbody');
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><input type="text" name="team" required /></td>
+        <td><input type="text" name="name" required /></td>
+        <td><input type="number" name="runs" min="0" value="0" required /></td>
+        <td><input type="number" name="fours" min="0" value="0" required /></td>
+        <td><input type="number" name="sixes" min="0" value="0" required /></td>
+        <td><input type="number" name="wickets" min="0" value="0" required /></td>
+        <td><input type="number" name="catches" min="0" value="0" required /></td>
+        <td><input type="number" name="runouts" min="0" value="0" required /></td>
+        <td><input type="number" name="stumpings" min="0" value="0" required /></td>
+        <td>
+          <select name="playingXI">
+            <option value="1" selected>Yes</option>
+            <option value="0">No</option>
+          </select>
+        </td>
+        <td><button type="button" class="remove-btn" onclick="removeRow(this)">&#10005;</button></td>
+      `;
+      tbody.appendChild(row);
+    }
+
+    function removeRow(button) {
+      const row = button.closest('tr');
+      const tbody = row.parentNode;
+      if (tbody.rows.length > 1) {
+        tbody.removeChild(row);
+      }
+    }
+
+    // Excel Upload Functionality
+    document.getElementById('uploadBtn').addEventListener('click', function() {
+      const fileInput = document.getElementById('excelUpload');
+      const file = fileInput.files[0];
+      if (!file) {
+        alert('Please select an Excel (.xlsx) file.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        // Find header row and map columns
+        const header = jsonData[0].map(h => h ? h.toString().trim().toLowerCase() : "");
+        const body = jsonData.slice(1).filter(row => row.length && row[0]);
+        // Required columns
+        const colMap = {
+          team: header.findIndex(h => h === "team"),
+          name: header.findIndex(h => h.includes("player")),
+          runs: header.findIndex(h => h === "runs"),
+          fours: header.findIndex(h => h === "4s"),
+          sixes: header.findIndex(h => h === "6s"),
+          wickets: header.findIndex(h => h === "wickets"),
+          catches: header.findIndex(h => h === "catches"),
+          runouts: header.findIndex(h => h.includes("run out")),
+          stumpings: header.findIndex(h => h.includes("stump")),
+          playingXI: header.findIndex(h => h.includes("playing"))
+        };
+        // Validate
+        if (Object.values(colMap).some(idx => idx === -1)) {
+          alert("Excel header must include: Team, Player Name, Runs, 4s, 6s, Wickets, Catches, Run Outs, Stumpings, Playing XI?");
+          return;
+        }
+        // Clear old rows
+        const tbody = document.querySelector('#playersTable tbody');
+        tbody.innerHTML = "";
+        // Populate table
+        body.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><input type="text" name="team" value="${row[colMap.team] || ""}" required /></td>
+            <td><input type="text" name="name" value="${row[colMap.name] || ""}" required /></td>
+            <td><input type="number" name="runs" min="0" value="${row[colMap.runs] || 0}" required /></td>
+            <td><input type="number" name="fours" min="0" value="${row[colMap.fours] || 0}" required /></td>
+            <td><input type="number" name="sixes" min="0" value="${row[colMap.sixes] || 0}" required /></td>
+            <td><input type="number" name="wickets" min="0" value="${row[colMap.wickets] || 0}" required /></td>
+            <td><input type="number" name="catches" min="0" value="${row[colMap.catches] || 0}" required /></td>
+            <td><input type="number" name="runouts" min="0" value="${row[colMap.runouts] || 0}" required /></td>
+            <td><input type="number" name="stumpings" min="0" value="${row[colMap.stumpings] || 0}" required /></td>
+            <td>
+              <select name="playingXI">
+                <option value="1" ${String(row[colMap.playingXI]).toLowerCase().startsWith("y") ? "selected" : ""}>Yes</option>
+                <option value="0" ${String(row[colMap.playingXI]).toLowerCase().startsWith("n") ? "selected" : ""}>No</option>
+              </select>
+            </td>
+            <td><button type="button" class="remove-btn" onclick="removeRow(this)">&#10005;</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    // Group array of objects by property
+    function groupBy(array, property) {
+      return array.reduce((grouped, element) => {
+        const key = element[property] || 'Unassigned';
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(element);
+        return grouped;
+      }, {});
+    }
+
+    document.getElementById('fantasyForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const tbody = document.querySelector('#playersTable tbody');
+      const rows = tbody.querySelectorAll('tr');
+      let output = '<table id="resultTable"><tr><th>Team</th><th>Player</th><th>Points</th></tr>';
+
+      // Collect player data for grouping
+      let players = [];
+      rows.forEach(row => {
+        const team = row.querySelector('input[name="team"]').value.trim();
+        const name = row.querySelector('input[name="name"]').value.trim();
+        const runs = parseInt(row.querySelector('input[name="runs"]').value, 10) || 0;
+        const fours = parseInt(row.querySelector('input[name="fours"]').value, 10) || 0;
+        const sixes = parseInt(row.querySelector('input[name="sixes"]').value, 10) || 0;
+        const wickets = parseInt(row.querySelector('input[name="wickets"]').value, 10) || 0;
+        const catches = parseInt(row.querySelector('input[name="catches"]').value, 10) || 0;
+        const runouts = parseInt(row.querySelector('input[name="runouts"]').value, 10) || 0;
+        const stumpings = parseInt(row.querySelector('input[name="stumpings"]').value, 10) || 0;
+        const playingXI = parseInt(row.querySelector('select[name="playingXI"]').value, 10) || 0;
+
+        let points = 0;
+        // Batting
+        points += runs;
+        points += fours * 1;
+        points += sixes * 2;
+        if (runs >= 30) points += 4;
+        if (runs >= 50) points += 8;
+        if (runs >= 100) points += 16;
+        // Bowling
+        points += wickets * 25;
+        // Fielding
+        points += catches * 8;
+        points += runouts * 6;
+        points += stumpings * 12;
+        // Playing XI
+        if (playingXI) points += 4;
+
+        output += `<tr><td>${team}</td><td>${name}</td><td>${points}</td></tr>`;
+        players.push({ team, name, points });
+      });
+      output += '</table>';
+
+      // Insert the output HTML
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = output;
+
+      // Animate the result table
+      const resultTable = document.getElementById('resultTable');
+      resultTable.classList.remove('animated-fade-in');
+      void resultTable.offsetWidth;
+      resultTable.classList.add('animated-fade-in');
+
+      // Group players by team and sum points per team
+      const grouped = groupBy(players, 'team');
+      const teamSection = document.getElementById('teamSection');
+      let teamHTML = '<h2>Players Grouped by Team (with Team Total Points)</h2>';
+
+      // Calculate team totals and store as array for sorting
+      let teamArray = Object.keys(grouped).map(team => {
+        const teamTotal = grouped[team].reduce((sum, p) => sum + p.points, 0);
+        return { team, players: grouped[team], total: teamTotal };
+      });
+
+      // Sort by team total descending
+      teamArray.sort((a, b) => b.total - a.total);
+
+      // Find max for bar scaling
+      let maxTotal = teamArray.length > 0 ? teamArray[0].total : 0;
+
+      // Bar chart at the top
+      teamHTML += `<div class="bar-chart-wrapper">
+        <div class="bar-chart">`;
+      teamArray.forEach(teamObj => {
+        const barWidth = maxTotal ? (teamObj.total / maxTotal * 100) : 0;
+        teamHTML += `
+          <div class="bar-row">
+            <span class="bar-label" title="${teamObj.team}">${teamObj.team}</span>
+            <div class="bar-bar-container">
+              <div class="bar-bar" style="width:${barWidth}%; min-width:40px;">${teamObj.total} pts</div>
+            </div>
+          </div>`;
+      });
+      teamHTML += `</div>
+      </div>`;
+
+      // Team breakdown
+      teamArray.forEach(teamObj => {
+        const team = teamObj.team;
+        const teamTotal = teamObj.total;
+        const barWidth = maxTotal ? (teamTotal / maxTotal * 100) : 0;
+        teamHTML += `<div class="team-group">
+          <h3>${team} <span class="team-total">[Total: ${teamTotal} pts]</span></h3>
+          <div class="bar-container">
+            <div class="bar" style="width: ${barWidth}%; min-width: 40px;">${teamTotal} pts</div>
+          </div>
+          <div class="team-player-list">`;
+        teamObj.players.forEach(player => {
+          teamHTML += `<span>${player.name} (${player.points} pts)</span>`;
+        });
+        teamHTML += `</div></div>`;
+      });
+      teamSection.innerHTML = teamHTML;
+      teamSection.style.display = 'block';
+
+      // Move the team section to the top of the body
+      document.body.insertBefore(teamSection, document.body.firstChild);
+    });
+  </script>
+</body>
+</html>
