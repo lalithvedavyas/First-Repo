@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fantasy Cricket Points Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 900px;
+      margin: 30px auto;
+      background-color: #fff;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    fieldset {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+    }
+
+    legend {
+      font-weight: bold;
+    }
+
+    #playerList label {
+      display: block;
+      margin: 5px 0;
+    }
+
+    label, select {
+      display: block;
+      margin-top: 10px;
+    }
+
+    select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    #result {
+      text-align: center;
+      font-size: 1.2em;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Fantasy Cricket Points Calculator</h1>
+    <form id="teamForm">
+      <fieldset>
+        <legend>Select Your Playing XI</legend>
+        <div id="playerList"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Assign Captain and Vice-Captain</legend>
+        <label for="captain">Captain:</label>
+        <select id="captain">
+          <option value="">-- Select Captain --</option>
+        </select>
+
+        <label for="viceCaptain">Vice-Captain:</label>
+        <select id="viceCaptain">
+          <option value="">-- Select Vice-Captain --</option>
+        </select>
+      </fieldset>
+
+      <button type="submit">Calculate Points</button>
+    </form>
+
+    <div id="result">
+      <p><strong>Total Points:</strong> <span id="totalPoints">0</span></p>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const players = [
+        { id: 1, name: 'Virat Kohli', role: 'Batsman' },
+        { id: 2, name: 'Rohit Sharma', role: 'Batsman' },
+        { id: 3, name: 'Hardik Pandya', role: 'Allrounder' },
+        { id: 4, name: 'Jasprit Bumrah', role: 'Bowler' },
+        { id: 5, name: 'MS Dhoni', role: 'Wicketkeeper' },
+        { id: 6, name: 'Shikhar Dhawan', role: 'Batsman' },
+        { id: 7, name: 'KL Rahul', role: 'Wicketkeeper' },
+        { id: 8, name: 'Rishabh Pant', role: 'Wicketkeeper' },
+        { id: 9, name: 'Kieron Pollard', role: 'Allrounder' },
+        { id: 10, name: 'Ravindra Jadeja', role: 'Allrounder' },
+        { id: 11, name: 'Bhuvneshwar Kumar', role: 'Bowler' },
+        { id: 12, name: 'Yuzvendra Chahal', role: 'Bowler' },
+        { id: 13, name: 'Shreyas Iyer', role: 'Batsman' },
+        { id: 14, name: 'Prithvi Shaw', role: 'Batsman' },
+        { id: 15, name: 'Deepak Chahar', role: 'Bowler' }
+      ];
+
+      const playerListDiv = document.getElementById('playerList');
+      const captainSelect = document.getElementById('captain');
+      const viceCaptainSelect = document.getElementById('viceCaptain');
+      const totalPointsSpan = document.getElementById('totalPoints');
+
+      players.forEach(player => {
+        const label = document.createElement('label');
+        label.innerHTML = `<input type="checkbox" value="${player.id}" data-role="${player.role}"> ${player.name} (${player.role})`;
+        playerListDiv.appendChild(label);
+      });
+
+      players.forEach(player => {
+        const option = document.createElement('option');
+        option.value = player.id;
+        option.textContent = player.name;
+        captainSelect.appendChild(option);
+        viceCaptainSelect.appendChild(option.cloneNode(true));
+      });
+
+      document.getElementById('teamForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const checkedBoxes = Array.from(document.querySelectorAll('#playerList input[type="checkbox"]:checked'));
+        if (checkedBoxes.length !== 11) {
+          alert('Please select exactly 11 players.');
+          return;
+        }
+
+        const selectedPlayers = checkedBoxes.map(box => {
+          const player = players.find(p => p.id == box.value);
+          return {
+            ...player,
+            runs: Math.floor(Math.random() * 100),
+            wickets: Math.floor(Math.random() * 5),
+            catches: Math.floor(Math.random() * 3)
+          };
+        });
+
+        const captainId = parseInt(captainSelect.value);
+        const viceCaptainId = parseInt(viceCaptainSelect.value);
+        const captain = players.find(p => p.id === captainId);
+        const viceCaptain = players.find(p => p.id === viceCaptainId);
+
+        if (!captainId || !viceCaptainId) {
+          alert('Please select both Captain and Vice-Captain.');
+          return;
+        }
+
+        if (captainId === viceCaptainId) {
+          alert('Captain and Vice-Captain cannot be the same player.');
+          return;
+        }
+
+        const totalPoints = calculatePoints(selectedPlayers, captainId, viceCaptainId);
+        totalPointsSpan.textContent = totalPoints;
+      });
+
+      function calculatePoints(players, captainId, viceCaptainId) {
+        let total = 0;
+        players.forEach(p => {
+          let points = p.runs + p.wickets * 25 + p.catches * 8;
+          if (p.id === captainId) points *= 2;
+          else if (p.id === viceCaptainId) points *= 1.5;
+          total += points;
+        });
+        return Math.round(total);
+      }
+    });
+  </script>
+</body>
+</html>
